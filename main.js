@@ -451,7 +451,7 @@ async function inferenceLoop() {
       );
       const isSafetyZone = best.label && best.label.toLowerCase().includes('안전지대');
       const thresholdExceeded = best.label && best.prob >= threshold;
-      const skipVibrations = isSafetyZone && thresholdExceeded;
+      const skipVibrations = isSafetyZone;
       
       // 위험지대 감지 시 화면 전체 빨간색 깜빡이는 효과
       if (hasDangerForFlash && !isBestSafe) {
