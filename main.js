@@ -264,14 +264,16 @@ async function openCamera() {
   }
 }
 
+const MODEL_DIR = './tm-my-image-model';
+
 async function loadModel() {
   try {
     setStatus('모델 로딩 중...', false);
     log('모델 파일 다운로드 중...');
     
     // Teachable Machine 모델 로드
-    const modelURL = './model.json';
-    const metadataURL = './metadata.json';
+    const modelURL = `${MODEL_DIR}/model.json`;
+    const metadataURL = `${MODEL_DIR}/metadata.json`;
     
     model = await tmImage.load(modelURL, metadataURL);
     
