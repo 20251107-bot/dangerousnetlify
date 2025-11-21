@@ -291,7 +291,7 @@ async function loadModel() {
 function shouldVibrateForNonGround(predictions) {
   if (!predictions || predictions.length === 0) return false;
   
-  const GROUND_LABELS = ['평지', 'ground', '평면', '바닥']; // 평지로 간주할 라벨들
+  const GROUND_LABELS = ['평지', 'ground', '평면', '바닥', '안전', '안전지대']; // 평지로 간주할 라벨들
   
   for (let i = 0; i < predictions.length; i++) {
     const p = predictions[i];
@@ -445,10 +445,13 @@ async function inferenceLoop() {
       
       // 위험지대 감지 여부 확인
       const hasDangerForFlash = confirmed || shouldVibrate90 || (best.label && best.prob >= threshold);
-      const GROUND_LABELS = ['평지', 'ground', '평면', '바닥', '안전'];
+      const GROUND_LABELS = ['평지', 'ground', '평면', '바닥', '안전', '안전지대'];
       const isBestSafe = best.label && GROUND_LABELS.some(groundLabel => 
         best.label.toLowerCase().includes(groundLabel.toLowerCase())
       );
+      const isSafetyZone = best.label && best.label.toLowerCase().includes('안전지대');
+      const thresholdExceeded = best.label && best.prob >= threshold;
+      const skipVibrations = isSafetyZone && thresholdExceeded;
       
       // 위험지대 감지 시 화면 전체 빨간색 깜빡이는 효과
       if (hasDangerForFlash && !isBestSafe) {
@@ -458,13 +461,16 @@ async function inferenceLoop() {
       }
 
       // 진동 제어
-      // 1. 평지를 제외한 클래스에서 90% 이상 확률인 경우: 1초씩 진동
-      if (shouldVibrate90) {
+      // '안전지대' 이상 확률이면 진동을 끕니다.
+      if (skipVibrations) {
+        stopVibrationPattern();
+        stopVibration();
+      } else if (shouldVibrate90) {
         startVibrationPattern();
       } else {
         stopVibrationPattern();
         // 2. 기존 로직: 확정된 위험 객체 감지 시 진동
-        if (confirmed) {
+        if (confirmed || thresholdExceeded) {
           vibrateDevice();
         } else {
           stopVibration();
