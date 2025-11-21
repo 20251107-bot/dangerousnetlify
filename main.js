@@ -22,6 +22,7 @@ const ui = {
 };
 
 let DANGER_LABELS = []; // 위험 라벨들 (labels.txt에서 자동 로드)
+const SAFE_LABELS = ['평지', 'ground', '평면', '바닥', '안전', '안전지대'];
 
 let model = null;
 let webcamStream = null;
@@ -77,7 +78,7 @@ function updateModelStatus(predictions, best, confirmed) {
     ui.modelStatusContent.innerHTML = '';
     
     // 평지 라벨 확인 (안전으로 표시)
-    const GROUND_LABELS = ['평지', 'ground', '평면', '바닥', '안전'];
+    const GROUND_LABELS = SAFE_LABELS;
     
     // 고정된 순서로 표시 (모델의 라벨 순서 유지)
     // predictions 배열의 순서를 유지하되, DANGER_LABELS 순서에 맞춰 정렬
@@ -292,7 +293,7 @@ async function loadModel() {
 function shouldVibrateForNonGround(predictions) {
   if (!predictions || predictions.length === 0) return false;
   
-  const GROUND_LABELS = ['평지', 'ground', '평면', '바닥']; // 평지로 간주할 라벨들
+  const GROUND_LABELS = SAFE_LABELS; // 평지로 간주할 라벨들
   
   for (let i = 0; i < predictions.length; i++) {
     const p = predictions[i];
@@ -445,14 +446,14 @@ async function inferenceLoop() {
       ctx.clearRect(0, 0, ui.overlay.width, ui.overlay.height);
       
       // 위험지대 감지 여부 확인
-      const hasDangerForFlash = confirmed || shouldVibrate90 || (best.label && best.prob >= threshold);
-      const GROUND_LABELS = ['평지', 'ground', '평면', '바닥', '안전'];
-      const isBestSafe = best.label && GROUND_LABELS.some(groundLabel => 
+      const isBestSafe = best.label && SAFE_LABELS.some(groundLabel => 
         best.label.toLowerCase().includes(groundLabel.toLowerCase())
       );
+      const dangerConfirmed = confirmed && !isBestSafe;
+      const hasDangerForFlash = !isBestSafe && (dangerConfirmed || shouldVibrate90 || (best.label && best.prob >= threshold));
       
       // 위험지대 감지 시 화면 전체 빨간색 깜빡이는 효과
-      if (hasDangerForFlash && !isBestSafe) {
+      if (hasDangerForFlash) {
         const flashIntensity = 0.3 + Math.sin(Date.now() / 200) * 0.3;
         ctx.fillStyle = `rgba(255, 0, 0, ${flashIntensity})`;
         ctx.fillRect(0, 0, ui.overlay.width, ui.overlay.height);
@@ -465,7 +466,7 @@ async function inferenceLoop() {
       } else {
         stopVibrationPattern();
         // 2. 기존 로직: 확정된 위험 객체 감지 시 진동
-        if (confirmed) {
+        if (dangerConfirmed) {
           vibrateDevice();
         } else {
           stopVibration();
@@ -477,7 +478,7 @@ async function inferenceLoop() {
       
       // 원형 표시 업데이트
       // 모델 정상 작동 + 위험지대 인식 여부 확인
-      const hasDanger = confirmed || shouldVibrate90 || (best.label && best.prob >= threshold);
+      const hasDanger = hasDangerForFlash;
       updateStatusIndicator(true, hasDanger, true, true); // 감지 중이므로 isDetecting = true, 카메라 작동 중
       
       setStatus('감지 중...', true);
