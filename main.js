@@ -451,6 +451,7 @@ async function inferenceLoop() {
       );
       const isSafetyZone = best.label && best.label.toLowerCase().includes('안전지대');
       const thresholdExceeded = best.label && best.prob >= threshold;
+      const safetyZoneActive = isSafetyZone && thresholdExceeded;
       const skipVibrations = isSafetyZone;
       
       // 위험지대 감지 시 화면 전체 빨간색 깜빡이는 효과
@@ -482,7 +483,7 @@ async function inferenceLoop() {
       
       // 원형 표시 업데이트
       // 모델 정상 작동 + 위험지대 인식 여부 확인
-      const hasDanger = confirmed || shouldVibrate90 || (best.label && best.prob >= threshold);
+      const hasDanger = safetyZoneActive ? false : (confirmed || shouldVibrate90 || (best.label && best.prob >= threshold));
       updateStatusIndicator(true, hasDanger, true, true); // 감지 중이므로 isDetecting = true, 카메라 작동 중
       
       setStatus('감지 중...', true);
