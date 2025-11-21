@@ -1,0 +1,12 @@
+# Netlify 배포 설정
+# 모델 파일 캐싱 최적화
+[[headers]]
+  for = "/*.h5"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/*.txt"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>'스몸비'를 위한 스마트폰 위험 감지 시스템</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: #0b1020;
+        color: #e8ecf1;
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 16px;
+        height: 100%;
+      }
+      header {
+        grid-column: 1 / -1;
+        padding: 12px 16px;
+        background: #0d1328;
+        border-bottom: 1px solid #1b254b;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .vibration-notice {
+        background: #ff6b6b;
+        border: 2px solid #ff4757;
+        border-radius: 8px;
+        padding: 8px 9.6px;
+        margin-bottom: 12px;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 15pt;
+        text-align: center;
+        line-height: 1.3;
+      }
+      .model-status {
+        background: #0b1020;
+        border: 1px solid #1b254b;
+        border-radius: 6px;
+        padding: 12px;
+        height: 300px;
+        overflow: auto;
+        font-size: 12px;
+      }
+      .model-status-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: #e8ecf1;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .model-status-title::before {
+        content: '📊';
+        font-size: 16px;
+      }
+      .prediction-item {
+        margin-bottom: 12px;
+      }
+      .prediction-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+      .prediction-label {
+        color: #e8ecf1;
+        font-size: 13px;
+      }
+      .prediction-value {
+        color: #b7c2d7;
+        font-size: 13px;
+        font-weight: bold;
+      }
+      .prediction-bar-container {
+        width: 100%;
+        height: 20px;
+        background: #1b254b;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+      .prediction-bar {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+      }
+      .prediction-bar.safe {
+        background: #4caf50;
+      }
+      .prediction-bar.danger {
+        background: #3356ff;
+      }
+      main {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 16px;
+        padding: 16px;
+      }
+      #stage {
+        position: relative;
+        background: #0d1328;
+        border: 1px solid #1b254b;
+        border-radius: 8px;
+        overflow: hidden;
+        min-height: 400px;
+      }
+      .danger-flash {
+        animation: dangerFlash 0.5s ease-in-out infinite;
+      }
+      @keyframes dangerFlash {
+        0%, 100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+      video, canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .sidebar {
+        background: #0d1328;
+        border: 1px solid #1b254b;
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .camera-preview {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #0b1020;
+        border: 1px solid #1b254b;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+      }
+      .camera-preview video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .row label {
+        min-width: 120px;
+        font-size: 13px;
+        color: #b7c2d7;
+      }
+      .row input[type="text"], .row input[type="number"] {
+        flex: 1;
+        background: #0b1020;
+        border: 1px solid #1b254b;
+        color: #e8ecf1;
+        padding: 6px 8px;
+        border-radius: 6px;
+      }
+      button {
+        background: #3356ff;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #192240;
+        border: 1px solid #2a3a78;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #0b1020;
+        border: 1px solid #1b254b;
+        color: #b7c2d7;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      .status-indicator {
+        position: fixed;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: move;
+        z-index: 1000;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .status-indicator.safe {
+        background-color: #4caf50;
+        border-color: #66bb6a;
+      }
+      .status-indicator.warning {
+        background-color: #ffc107;
+        border-color: #ffd54f;
+      }
+      .status-indicator.danger {
+        background-color: #f44336;
+        border-color: #ef5350;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>'스몸비'를 위한 스마트폰 위험 감지 시스템</h1>
+    </header>
+    <main class="container">
+      <section id="stage">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <div id="statusIndicator" class="status-indicator safe"></div>
+      </section>
+      <aside class="sidebar">
+        <div class="camera-preview">
+          <video id="videoPreview" autoplay playsinline muted></video>
+        </div>
+        <div class="row">
+          <label>감지 임계치</label>
+          <input id="threshold" type="number" min="0" max="1" step="0.01" value="0.85" />
+        </div>
+        <div class="row">
+          <label>확정 시간(초)</label>
+          <input id="steadyFrames" type="number" min="0.1" max="10" step="0.1" value="1.5" />
+        </div>
+        <div class="row">
+          <button id="btnCamera">📷 카메라 시작</button>
+        </div>
+        <div class="row">
+          <button id="btnStart">▶️ 감지 시작</button>
+        </div>
+        <div class="vibration-notice">⚠️ 기기가 무음 상태라면 ⚠️<br><br>진동으로 바꿔주시기 바랍니다</div>
+        <div class="model-status" id="modelStatus">
+          <div class="model-status-title">실시간 예측 결과</div>
+          <div id="modelStatusContent"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- TensorFlow.js from unpkg -->
+    <script src="https://unpkg.com/@tensorflow/tfjs@4.2.0/dist/tf.min.js"></script>
+    <!-- Teachable Machine from unpkg -->
+    <script src="https://unpkg.com/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <!-- Main Script -->
+    <script src="main.js"></script>
+  </body>
+  </html>
+
+
+
