@@ -264,33 +264,26 @@ async function openCamera() {
   }
 }
 
-const MODEL_DIR = './tm-my-image-model';
-
 async function loadModel() {
   try {
     setStatus('모델 로딩 중...', false);
     log('모델 파일 다운로드 중...');
-    
-    // Teachable Machine 모델 로드
-    const modelURL = `${MODEL_DIR}/model.json`;
-    const metadataURL = `${MODEL_DIR}/metadata.json`;
-    
+
+    const modelURL = './model.json';
+    const metadataURL = './metadata.json';
+
     model = await tmImage.load(modelURL, metadataURL);
-    
-    // metadata에서 라벨 추출
+
     DANGER_LABELS = model.getClassLabels();
-    
-    log(`✓ 모델 로드 완료!`);
+    log(`✓ 모델 로드 완료! (${modelURL})`);
     log(`라벨: ${DANGER_LABELS.join(', ')}`);
     setStatus('모델 준비 완료', false);
-    // 모델 로드 성공 시 초록색 (위험 미인식 상태)
     updateStatusIndicator(true, false, false, webcamStream !== null);
   } catch (e) {
     log(`✗ 모델 로드 실패: ${e.message}`);
     log('Teachable Machine에서 웹용 모델을 다운로드해주세요.');
     log('(Export Model → TensorFlow.js 선택)');
     setStatus('모델 로드 실패', false);
-    // 모델 로드 실패 시 노란색
     updateStatusIndicator(false, false, false, webcamStream !== null);
   }
 }

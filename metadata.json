@@ -1,1 +1,1 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.10","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2025-10-16T04:54:45.939Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["계단","기둥","횡단보도"],"imageSize":224}
+{"tfjsVersion":"1.7.4","tmVersion":"2.4.10","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2025-11-21T00:14:21.495Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["안전지대","계단","횡단보도","자동차","다른 보행자","기둥,벽"],"imageSize":224}
